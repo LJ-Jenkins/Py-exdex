@@ -29,3 +29,10 @@ print(res)
 ```
 
 All credit and thanks to authors of the original R package.
+
+Dependencies:
+numpy
+math
+statsmodels
+itertools
+scipy
