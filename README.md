@@ -23,7 +23,9 @@ data = np.random.randn(100, 100)
 u = np.nanpercentile(data, 99)
 res = ex.dgaps(data, u, D=10, inc_cens=True)
 print(res)
-{'theta': 0.9999944125101555, 'se': 0.03818228483786259, 'se_exp': 0.034222672761982896, 'N0': 7, 'N1': 93.0, 'sum_qtd': 99.57000000000001, 'n_dgaps': 101, 'q_u': 0.01, 'D': 10, 'u': 2.349454470755292, 'inc_cens': True, 'max_loglik': -116.03532746020215}
+{'theta': 0.9999944125101555, 'se': 0.03818228483786259, 'se_exp': 0.034222672761982896, 'N0': 7, 'N1': 93.0, 
+'sum_qtd': 99.57000000000001, 'n_dgaps': 101, 'q_u': 0.01, 'D': 10, 'u': 2.349454470755292, 'inc_cens': True, 
+'max_loglik': -116.03532746020215}
 ```
 
 All credit and thanks to authors of the original R package.
