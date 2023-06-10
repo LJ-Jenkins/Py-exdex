@@ -1,7 +1,6 @@
 import math
 import numpy as np
 import statsmodels.api as sm
-from scipy import stats
 
 def fun(n_wls, N, S_1_sort, exp_qs, ws, nx):
     chi_i = S_1_sort[:n_wls]

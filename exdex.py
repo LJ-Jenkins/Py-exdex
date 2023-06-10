@@ -37,7 +37,6 @@ def dgaps(data, u, D=1, inc_cens=True):
     else:
         def dgaps_negloglik(theta):
             return -exdex_dgaps.loglik(theta, **ss)
-        #result = minimize(dgaps_negloglik, theta_init, method='bounded', bounds=[(0, 1)])
         result = minimize_scalar(dgaps_negloglik, bounds=(0, 1), method='bounded')
         theta_mle = result.x
     exp_info = exdex_dgaps.exp_info(theta_mle, ss=ss, inc_cens=inc_cens) if N1 > 0 else np.nan
