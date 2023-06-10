@@ -10,7 +10,7 @@ Python translation of the exdex R package (Estimation of the Extremal Index):
  All code has only been minimally tested (but results mirror that of the R package) - use with caution
  
  
-At present, only the functions for the extremal index calculation have been completed, in the future I will look to translating the rest of the package, such as the diagnostic plots. For full details about the theory, functions, and inputs, please refer to the original package.
+At present, only the functions for the calculation of the trheshold-based estimators of the extremal index (k-gaps, d-gaps, iterated weighted least squares) have been completed, in the future I will look to translating the rest of the package. For full details about the theory, functions, and inputs, please refer to the original package.
  
  
 Syntax is exdex.function(), the currently working functions are:
