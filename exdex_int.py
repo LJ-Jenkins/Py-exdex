@@ -44,4 +44,12 @@ def split_by_nans(data):
     new_data = np.hstack(padded_groups)
     return new_data
 
+def ecdf2(x, y):
+    def sum_fun(y):
+        return np.sum(x <= y) / len(x)
+    return np.vectorize(sum_fun)(y)
+
+def log0const(x, const):
+    return np.log(x + np.logical_not(x)) + const * np.logical_not(x)
+
 # fini

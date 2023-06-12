@@ -1,9 +1,11 @@
 import exdex_dgaps
 import exdex_kgaps
 import exdex_iwls
+import exdex_spm
 import exdex_int
 import math
 import numpy as np
+import pandas as pd
 from scipy.optimize import minimize_scalar
 
 def dgaps(data, u, D=1, inc_cens=True):
@@ -165,6 +167,87 @@ def iwls(data, u, maxit=100):
     n_wls = temp["n_wls"]
     theta = temp["theta"]
     res = {"theta": theta, "conv": conv, "niter": niter, "n_gaps": n_gaps}
+    return res
+
+def spm(data, b, bias_adjust="BB3", constrain=True, varN=True, which_dj="last"):
+    data = np.array(data)
+    data = np.reshape(data, (data.size,1))
+    if data is None or len(data) == 0:
+        raise ValueError("'data' must be non-empty and >len(0)")
+    if np.any(np.isnan(data)) or np.any(np.isinf(data)):
+        raise ValueError("'data' contains missing or infinite values")
+    if not isinstance(b, int) or b < 1:
+        raise ValueError("'b' must be a positive integer")
+    if bias_adjust not in ["BB3", "BB1", "N", "none"]:
+        raise ValueError("'bias_adjust' must be one of 'BB3', 'BB1', 'N', or 'none'")
+    if not isinstance(constrain, bool):
+        raise ValueError("'constrain' must be a logical value")
+    if not isinstance(varN, bool):
+        raise ValueError("'varN' must be a logical value")
+    if which_dj not in ["last", "first"]:
+        raise ValueError("'which_dj' must be either 'last' or 'first'")
+    k_n = len(data) // b
+    if k_n < 1:
+        raise ValueError("b is too large: it is larger than length(data)")
+    all_max = exdex_spm.all_max_rcpp(data, b, which_dj)
+    res = exdex_spm.ests_sigmahat_dj(all_max, b, which_dj, bias_adjust)
+    Fhaty = exdex_int.ecdf2(all_max['xs'], all_max['ys'])
+    k_n_sl = len(all_max['ys'])
+    m = len(all_max['xs'])
+    const = -np.log(m - b + k_n_sl)
+    if bias_adjust == "N":
+        Fhaty = (m * Fhaty - b) / (m - b)
+    res['theta_sl'] = np.array((-1 / np.mean(b * exdex_int.log0const(Fhaty, const)),
+        1 / (b * np.mean(1 - Fhaty))))
+    res['data_sl'] = np.hstack((-b * np.log(Fhaty), b * (1 - Fhaty)))
+    res['sigma2sl'] = res['sigma2dj_for_sl'] - (3 - 4 * np.log(2)) / res['theta_sl'] ** 2
+    res['sigma2sl'][res['sigma2sl'] <= 0] = np.nan
+    index = [0, 1] if varN else [1, 1]
+    res['se_dj'] = res['theta_dj'] ** 2 * np.sqrt(res['sigma2dj'][index] / k_n)
+    res['se_sl'] = res['theta_sl'] ** 2 * np.sqrt(res['sigma2sl'][index] / k_n)
+    res['raw_theta_dj'] = res['theta_dj']
+    res['raw_theta_sl'] = res['theta_sl']
+    if bias_adjust == "BB3":
+        res['bias_dj'] = res['theta_dj'] / k_n + res['theta_dj'] ** 3 * res['sigma2dj'] / k_n
+        res['theta_dj'] = res['theta_dj'] - res['bias_dj']
+        BB3adj_sl = res['theta_sl'] / k_n + res['theta_sl'] ** 3 * res['sigma2sl'] / k_n
+        BB1adj_sl = res['theta_sl'] / k_n
+        res['bias_sl'] = np.where(np.isnan(res['se_sl']), BB1adj_sl, BB3adj_sl)
+        res['theta_sl'] = res['theta_sl'] - res['bias_sl']
+    elif bias_adjust == "BB1":
+        res['bias_dj'] = res['theta_dj'] / k_n
+        res['theta_dj'] = res['theta_dj'] - res['bias_dj']
+        res['bias_sl'] = res['theta_sl'] / k_n
+        res['theta_sl'] = res['theta_sl'] - res['bias_sl']
+    else:
+        res['bias_dj'] = res['bias_sl'] = np.array([0,0])
+    res['theta_dj'] = np.append(res['theta_dj'], res['theta_dj'][1] - 1 / b)
+    res['theta_sl'] = np.append(res['theta_sl'], res['theta_sl'][1] - 1 / b)
+    if bias_adjust == "BB3" or bias_adjust == "BB1":
+        res['bias_dj'] = np.append(res['bias_dj'], res['bias_dj'][1] + 1 / b)
+        res['bias_sl'] = np.append(res['bias_sl'], res['bias_sl'][1] + 1 / b)
+    else:
+        res['bias_dj'] = np.append(res['bias_dj'], 1 / b)
+        res['bias_sl'] = np.append(res['bias_sl'], 1 / b)
+    res['se_dj'] = np.append(res['se_dj'], res['se_dj'][1])
+    res['se_sl'] = np.append(res['se_sl'], res['se_sl'][1])
+    res['uncon_theta_dj'] = res['theta_dj']
+    res['uncon_theta_sl'] = res['theta_sl']
+    if constrain:
+        res['theta_dj'] = np.minimum(res['theta_dj'], 1)
+        res['theta_sl'] = np.minimum(res['theta_sl'], 1)
+    res['theta_dj'] = np.maximum(res['theta_dj'], 0)
+    res['theta_sl'] = np.maximum(res['theta_sl'], 0)
+    res['bias_adjust'] = bias_adjust
+    res['b'] = b
+    rn = ["N2015, sliding", "BB2018, sliding", "BB2018b, sliding", "N2015, disjoint", "BB2018, disjoint", "BB2018b, disjoint"]
+    cn = ["Estimate", "Std. Error", "Bias Adjustment"]
+    summary_table = pd.DataFrame(np.reshape((res['theta_sl'], res['theta_dj'], 
+                                             res['se_sl'], res['se_dj'], res['bias_sl'], 
+                                             res['bias_dj']),[3,6]).T,
+                                 columns=cn, index=rn)
+    res['summary'] = summary_table
+    print(res['summary'])
     return res
 
 # fini
