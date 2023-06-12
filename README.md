@@ -13,7 +13,7 @@ Python translation of the exdex R package (Estimation of the Extremal Index):
 At present, only the functions for the estimation of the extremal index have been completed, in the future I will look to translating the rest of the package. For full details about the theory, functions, and inputs, please refer to the original package.
  
  
-Syntax is exdex.function(), the currently working functions are:
+Currently working functions are:
 
 ```python:Code
 import exdex
