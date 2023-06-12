@@ -59,6 +59,7 @@ All credit and thanks to authors of the original R package.
 
 Dependencies:
 numpy,
+pandas,
 math,
 statsmodels,
 itertools,
