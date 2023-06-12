@@ -71,6 +71,7 @@ def dgaps(data, u, D=1, inc_cens=True):
         'inc_cens': inc_cens,
         'max_loglik': max_loglik
     }
+    print(res)
     return res
 
 def kgaps(data, u, k=1, inc_cens=True):
@@ -131,6 +132,7 @@ def kgaps(data, u, k=1, inc_cens=True):
         'inc_cens': inc_cens,
         'max_loglik': max_loglik
     }
+    print(res)
     return res
 
 def iwls(data, u, maxit=100):
@@ -167,6 +169,7 @@ def iwls(data, u, maxit=100):
     n_wls = temp["n_wls"]
     theta = temp["theta"]
     res = {"theta": theta, "conv": conv, "niter": niter, "n_gaps": n_gaps}
+    print(res)
     return res
 
 def spm(data, b, bias_adjust="BB3", constrain=True, varN=True, which_dj="last"):
@@ -247,7 +250,7 @@ def spm(data, b, bias_adjust="BB3", constrain=True, varN=True, which_dj="last"):
                                              res['bias_dj']),[3,6]).T,
                                  columns=cn, index=rn)
     res['summary'] = summary_table
-    print(res['summary'])
+    print(summary_table)
     return res
 
 # fini
